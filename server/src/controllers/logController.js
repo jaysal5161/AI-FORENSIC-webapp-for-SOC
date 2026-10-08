@@ -12,6 +12,7 @@ const threatIntelService = require('../services/threatIntelService');
 const profilingService = require('../services/profilingService');
 const detectionService = require('../services/detectionService');
 const logger = require('../utils/logger');
+const { uploadsDir, ensureUploadsDir } = require('../utils/storage');
 
 function detectFormat(fileName, content) {
   const ext = path.extname(fileName).toLowerCase();
@@ -33,10 +34,7 @@ async function uploadLog(req, res, next) {
     let storedPath = '';
     let fileSize = 0;
 
-    const uploadsDir = path.join(__dirname, '../../uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
+    ensureUploadsDir();
 
     if (req.file) {
       fileName = req.file.originalname;
@@ -202,7 +200,6 @@ async function getRawFileContent(req, res, next) {
       });
     }
 
-    const uploadsDir = path.resolve(__dirname, '../../uploads');
     const resolvedPath = path.resolve(file.filePath);
     if (!resolvedPath.startsWith(uploadsDir)) {
       return res.status(403).json({ error: 'Forbidden', message: 'Access denied: File outside authorized storage directory.' });
@@ -247,7 +244,6 @@ async function downloadUploadedFile(req, res, next) {
       return res.status(404).json({ error: 'FileNotFound', message: 'Raw log file is not archived on disk' });
     }
 
-    const uploadsDir = path.resolve(__dirname, '../../uploads');
     const resolvedPath = path.resolve(file.filePath);
     if (!resolvedPath.startsWith(uploadsDir)) {
       return res.status(403).json({ error: 'Forbidden', message: 'Access denied: File outside authorized storage directory.' });
@@ -418,7 +414,6 @@ async function resetAllData(req, res, next) {
     });
 
     // 6. Delete physical uploaded files from disk
-    const uploadsDir = path.join(__dirname, '../../uploads');
     if (fs.existsSync(uploadsDir)) {
       const files = fs.readdirSync(uploadsDir);
       for (const f of files) {

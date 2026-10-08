@@ -1,15 +1,20 @@
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+// Support execution from either server directory or root directory (Vercel)
+dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config();
+
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-const path = require('path');
 const fs = require('fs');
 
 const { connectDB } = require('./config/database');
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
+const { ensureUploadsDir } = require('./utils/storage');
 
 // Route imports
 const authRoutes = require('./routes/authRoutes');
@@ -44,7 +49,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
       callback(null, true);
     } else {
       callback(new Error(`CORS policy violation: Origin '${origin}' is not authorized.`));
@@ -71,12 +76,22 @@ const globalLimiter = rateLimit({
 });
 app.use('/api', globalLimiter);
 
-// Ensure uploads directory exists on disk for secure storage
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-// Note: Unauthenticated static serving of /uploads removed for security (OWASP A01 / API1)
+// Ensure uploads directory exists for storage
+ensureUploadsDir();
+
+// Ensure database connection is active (vital for serverless cold-starts)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    logger.error(`Database connection check failed: ${err.message}`);
+    return res.status(500).json({
+      error: 'DatabaseError',
+      message: 'Database connection is currently unavailable'
+    });
+  }
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

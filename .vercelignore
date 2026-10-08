@@ -1,0 +1,21 @@
+# Local database and binaries
+server/bin/
+server/data/
+server/logs/
+logs/
+.tmp/
+server/uploads/
+
+# Test and benchmark scripts
+*.test.js
+test_*.js
+server/test_*.js
+
+# Local environment files
+.env.local
+.env.*.local
+
+# Local scripts and extraneous files
+AD logs.txt
+push.bat
+push.ps1

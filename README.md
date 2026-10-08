@@ -250,3 +250,30 @@ node test_e2e_ai_sql_api.js         # 14/14 AI NL-to-SQL core questions pass
 node test_rapid_lookup_and_sql.js   # 15/15 rapid lookup & SQL queries pass
 node verify.js                       # 10/10 end-to-end platform workflows pass
 ```
+
+---
+
+## 9. Deploying to Vercel
+
+The application is structured for 1-click deployment on [Vercel](https://vercel.com):
+- **Frontend**: Built with Vite into `client/dist`, served globally with client-side SPA routing (`/(.*)` -> `/index.html`).
+- **Backend**: Express API served via Vercel Serverless Function (`api/index.js`) routed seamlessly through `/api/(.*)`.
+
+### Step 1: Import Project to Vercel
+1. Push this repository to GitHub or GitLab.
+2. In the Vercel dashboard, click **"Add New..." -> "Project"** and import the repository.
+3. Leave the **Root Directory** as `./` (default).
+
+### Step 2: Configure Environment Variables in Vercel
+In the Vercel project settings under **Environment Variables**, add:
+- `MONGO_URI`: Your MongoDB Atlas connection URI (e.g., `mongodb+srv://user:pass@cluster0.mongodb.net/soc_platform?retryWrites=true&w=majority`).
+- `JWT_SECRET`: Secret key for JWT tokens (at least 32 characters, e.g., `soc_forensic_platform_super_secret_jwt_key_2026_at_least_32_chars!`).
+- `NODE_ENV`: `production`
+- *(Optional)* `GEMINI_API_KEY`: Google Gemini API key if using cloud AI for the NL-to-SQL assistant.
+
+### Step 3: Deploy
+Click **Deploy**. Vercel will:
+1. Run `npm install` at root to prepare dependencies.
+2. Run `npm --prefix client install && npm --prefix client run build` to compile the React application.
+3. Package `api/index.js` as an optimized Node.js serverless function.
+

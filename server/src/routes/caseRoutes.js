@@ -6,15 +6,13 @@ const crypto = require('crypto');
 const fs = require('fs');
 const caseController = require('../controllers/caseController');
 const { authenticate, authorize } = require('../middleware/auth');
+const { uploadsDir, ensureUploadsDir } = require('../utils/storage');
 
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+ensureUploadsDir();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();

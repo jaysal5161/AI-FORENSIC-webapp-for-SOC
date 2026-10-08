@@ -2,9 +2,59 @@ const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
 
-const logDir = path.join(__dirname, '../../logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+const isVercel = Boolean(process.env.VERCEL);
+const logDir = isVercel
+  ? path.join('/tmp', 'logs')
+  : path.join(__dirname, '../../logs');
+
+let canWriteFiles = false;
+try {
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+  canWriteFiles = true;
+} catch (e) {
+  canWriteFiles = false;
+}
+
+const transports = [
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.printf(({ timestamp, level, message, ...meta }) => {
+        const metaStr = Object.keys(meta).length && meta.service !== 'soc-platform'
+          ? ` ${JSON.stringify(meta)}`
+          : '';
+        return `[${timestamp}] ${level}: ${message}${metaStr}`;
+      })
+    )
+  })
+];
+
+if (canWriteFiles) {
+  try {
+    transports.push(
+      new winston.transports.File({
+        filename: path.join(logDir, 'error.log'),
+        level: 'error',
+        maxsize: 5242880, // 5MB
+        maxFiles: 5
+      }),
+      new winston.transports.File({
+        filename: path.join(logDir, 'combined.log'),
+        maxsize: 5242880,
+        maxFiles: 5
+      }),
+      new winston.transports.File({
+        filename: path.join(logDir, 'audit.log'),
+        level: 'info',
+        maxsize: 10485760, // 10MB
+        maxFiles: 10
+      })
+    );
+  } catch (err) {
+    // Graceful fallback to console
+  }
 }
 
 const logger = winston.createLogger({
@@ -16,25 +66,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: 'soc-platform' },
-  transports: [
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      maxsize: 5242880, // 5MB
-      maxFiles: 5
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: 5242880,
-      maxFiles: 5
-    }),
-    new winston.transports.File({
-      filename: path.join(logDir, 'audit.log'),
-      level: 'info',
-      maxsize: 10485760, // 10MB
-      maxFiles: 10
-    })
-  ]
+  transports
 });
 
 // Dedicated structured audit log function for security and compliance (OWASP A09)
@@ -46,22 +78,5 @@ logger.audit = function (action, meta = {}) {
     ...meta
   });
 };
-
-// Always log readable output to console in development
-
-// Always log readable output to console in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.printf(({ timestamp, level, message, ...meta }) => {
-        const metaStr = Object.keys(meta).length && meta.service !== 'soc-platform'
-          ? ` ${JSON.stringify(meta)}`
-          : '';
-        return `[${timestamp}] ${level}: ${message}${metaStr}`;
-      })
-    )
-  }));
-}
 
 module.exports = logger;

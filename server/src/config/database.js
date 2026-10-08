@@ -26,16 +26,32 @@ function checkPortAvailable(port = 27017) {
 }
 
 async function connectDB() {
+  // If already connected, reuse existing connection (vital for Vercel serverless functions)
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+  if (mongoose.connection.readyState === 2) {
+    await new Promise((resolve) => {
+      mongoose.connection.once('connected', resolve);
+      setTimeout(resolve, 3000);
+    });
+    if (mongoose.connection.readyState === 1) return;
+  }
+
   const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/soc_platform';
 
   // 1. Try direct connection first
   try {
     await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 2000
+      serverSelectionTimeoutMS: process.env.VERCEL ? 8000 : 2000
     });
     logger.info(`MongoDB connected directly to: ${uri}`);
     return;
   } catch (err) {
+    if (process.env.VERCEL) {
+      logger.error(`Vercel MongoDB connection failed to ${uri}: ${err.message}`);
+      throw err;
+    }
     logger.warn(`Direct MongoDB connection to ${uri} failed: ${err.message}`);
   }
 
