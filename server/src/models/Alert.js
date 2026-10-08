@@ -51,6 +51,11 @@ const alertSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Event'
   }],
+  rawFile: {
+    type: String,
+    default: '',
+    index: true
+  },
   ruleId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'DetectionRule',

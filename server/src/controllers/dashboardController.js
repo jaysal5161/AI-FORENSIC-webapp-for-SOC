@@ -4,102 +4,173 @@ const Case = require('../models/Case');
 const Endpoint = require('../models/Endpoint');
 const Account = require('../models/Account');
 const IOC = require('../models/IOC');
+const LogFile = require('../models/LogFile');
 
 async function getDashboardSummary(req, res, next) {
   try {
-    const [
-      totalEvents,
-      totalAlerts,
-      newAlerts,
-      investigatingAlerts,
-      resolvedAlerts,
-      criticalAlerts,
-      openCases,
-      totalEndpoints,
-      compromisedEndpoints,
-      totalAccounts,
-      compromisedAccounts,
-      totalIOCs,
-      maliciousIOCs,
-      recentAlerts
-    ] = await Promise.all([
-      Event.countDocuments(),
-      Alert.countDocuments(),
-      Alert.countDocuments({ status: 'new' }),
-      Alert.countDocuments({ status: 'investigating' }),
-      Alert.countDocuments({ status: 'resolved' }),
-      Alert.countDocuments({ severity: 'critical', status: { $in: ['new', 'investigating', 'assigned'] } }),
-      Case.countDocuments({ status: { $in: ['open', 'investigating', 'pending_review'] } }),
-      Endpoint.countDocuments(),
-      Endpoint.countDocuments({ status: 'compromised' }),
-      Account.countDocuments(),
-      Account.countDocuments({ status: 'compromised' }),
-      IOC.countDocuments(),
-      IOC.countDocuments({ reputation: 'malicious' }),
-      Alert.find()
-        .populate('assignedTo', 'fullName username')
-        .populate('ruleId', 'name mitreTechniqueId')
-        .sort({ createdAt: -1 })
-        .limit(8)
-    ]);
+    let { rawFile } = req.query;
 
-    // Alerts by severity
-    const alertsBySeverityAgg = await Alert.aggregate([
-      { $group: { _id: '$severity', count: { $sum: 1 } } }
-    ]);
+    // Check if any log files or events exist in the database
+    const totalEventsInDb = await Event.countDocuments();
+    const filesCount = await LogFile.countDocuments();
+
+    // If no log files exist or all events are empty, return completely reset 0 state
+    if (totalEventsInDb === 0 || filesCount === 0) {
+      return res.json({
+        activeFile: null,
+        isEmpty: true,
+        totals: {
+          events: 0,
+          alerts: 0,
+          activeAlerts: 0,
+          criticalAlerts: 0,
+          openCases: 0,
+          endpoints: 0,
+          compromisedEndpoints: 0,
+          accounts: 0,
+          compromisedAccounts: 0,
+          iocs: 0,
+          maliciousIOCs: 0
+        },
+        alertsByStatus: { new: 0, investigating: 0, resolved: 0 },
+        alertsBySeverity: [
+          { name: 'Critical', value: 0, color: '#f43f5e' },
+          { name: 'High', value: 0, color: '#f59e0b' },
+          { name: 'Medium', value: 0, color: '#38bdf8' },
+          { name: 'Low', value: 0, color: '#10b981' }
+        ],
+        eventsBySource: [],
+        topSourceIPs: [],
+        topTargetedAccounts: [],
+        topAffectedEndpoints: [],
+        eventsOverTime: [],
+        recentAlerts: []
+      });
+    }
+
+    // If rawFile is not provided, pick the latest uploaded file so we only show the selected/active file's logs
+    let activeLogFileDoc = null;
+    if (!rawFile) {
+      activeLogFileDoc = await LogFile.findOne().sort({ createdAt: -1 });
+      if (activeLogFileDoc) {
+        rawFile = activeLogFileDoc.fileName;
+      }
+    } else {
+      activeLogFileDoc = await LogFile.findOne({ fileName: rawFile });
+    }
+
+    if (!rawFile) {
+      const distinct = await Event.distinct('rawFile');
+      rawFile = distinct[0] || '';
+    }
+
+    const safeRegex = new RegExp('^' + rawFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+    const eventsQuery = { rawFile: safeRegex };
+
+    // 1. Get events for this specific chosen file only
+    const fileEvents = await Event.find(eventsQuery).select('_id host username sourceIP status severity timestamp eventType source description');
+    const totalEvents = fileEvents.length;
+
+    if (totalEvents === 0) {
+      return res.json({
+        activeFile: rawFile,
+        fileDetails: activeLogFileDoc,
+        isEmpty: true,
+        totals: {
+          events: 0,
+          alerts: 0,
+          activeAlerts: 0,
+          criticalAlerts: 0,
+          openCases: 0,
+          endpoints: 0,
+          compromisedEndpoints: 0,
+          accounts: 0,
+          compromisedAccounts: 0,
+          iocs: 0,
+          maliciousIOCs: 0
+        },
+        alertsByStatus: { new: 0, investigating: 0, resolved: 0 },
+        alertsBySeverity: [
+          { name: 'Critical', value: 0, color: '#f43f5e' },
+          { name: 'High', value: 0, color: '#f59e0b' },
+          { name: 'Medium', value: 0, color: '#38bdf8' },
+          { name: 'Low', value: 0, color: '#10b981' }
+        ],
+        eventsBySource: [],
+        topSourceIPs: [],
+        topTargetedAccounts: [],
+        topAffectedEndpoints: [],
+        eventsOverTime: [],
+        recentAlerts: []
+      });
+    }
+
+    const eventIds = fileEvents.map(e => e._id);
+    const affectedHosts = [...new Set(fileEvents.map(e => e.host).filter(Boolean))];
+    const affectedUsers = [...new Set(fileEvents.map(e => e.username).filter(u => u && u !== 'SYSTEM'))];
+
+    // 2. Alerts matching this specific file's events
+    const fileAlerts = await Alert.find({
+      $or: [
+        { rawFile: rawFile },
+        { rawFile: safeRegex },
+        { matchingEvents: { $in: eventIds } }
+      ]
+    })
+      .populate('assignedTo', 'fullName username')
+      .populate('ruleId', 'name mitreTechniqueId')
+      .sort({ createdAt: -1 });
+
+    const totalAlerts = fileAlerts.length;
+    const criticalAlerts = fileAlerts.filter(a => a.severity === 'critical').length;
+    const highAlerts = fileAlerts.filter(a => a.severity === 'high').length;
+    const mediumAlerts = fileAlerts.filter(a => a.severity === 'medium').length;
+    const lowAlerts = fileAlerts.filter(a => a.severity === 'low').length;
+    const newAlerts = fileAlerts.filter(a => a.status === 'new').length;
+    const investigatingAlerts = fileAlerts.filter(a => a.status === 'investigating').length;
+    const resolvedAlerts = fileAlerts.filter(a => a.status === 'resolved').length;
+
+    // 3. Alerts by severity for this file
     const alertsBySeverity = [
-      { name: 'Critical', value: alertsBySeverityAgg.find(a => a._id === 'critical')?.count || 0, color: '#f43f5e' },
-      { name: 'High', value: alertsBySeverityAgg.find(a => a._id === 'high')?.count || 0, color: '#f59e0b' },
-      { name: 'Medium', value: alertsBySeverityAgg.find(a => a._id === 'medium')?.count || 0, color: '#38bdf8' },
-      { name: 'Low', value: alertsBySeverityAgg.find(a => a._id === 'low')?.count || 0, color: '#10b981' }
+      { name: 'Critical', value: criticalAlerts, color: '#f43f5e' },
+      { name: 'High', value: highAlerts, color: '#f59e0b' },
+      { name: 'Medium', value: mediumAlerts, color: '#38bdf8' },
+      { name: 'Low', value: lowAlerts, color: '#10b981' }
     ];
 
-    // Events by source (top 6)
+    // 4. Events by source for this file only
     const eventsBySource = await Event.aggregate([
+      { $match: eventsQuery },
       { $group: { _id: '$source', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 6 },
       { $project: { name: '$_id', count: 1, _id: 0 } }
     ]);
 
-    // Top Source IPs
+    // 5. Top Source IPs for this file only
     const topSourceIPs = await Event.aggregate([
-      { $match: { sourceIP: { $ne: '', $exists: true } } },
+      { $match: { ...eventsQuery, sourceIP: { $ne: '', $exists: true } } },
       { $group: { _id: '$sourceIP', count: { $sum: 1 }, failedCount: { $sum: { $cond: [{ $eq: ['$status', 'failed'] }, 1, 0] } } } },
       { $sort: { count: -1 } },
       { $limit: 5 },
       { $project: { ip: '$_id', count: 1, failedCount: 1, _id: 0 } }
     ]);
 
-    // Top Targeted Accounts
-    const topTargetedAccounts = await Account.find()
+    // 6. Targeted Accounts for this file
+    const topTargetedAccounts = await Account.find({ username: { $in: affectedUsers } })
       .sort({ riskScore: -1, failedLogins: -1 })
       .limit(5)
       .select('username domain privilege riskScore status failedLogins');
 
-    // Top Affected Endpoints
-    const topAffectedEndpoints = await Endpoint.find()
+    // 7. Affected Endpoints for this file
+    const topAffectedEndpoints = await Endpoint.find({ hostname: { $in: affectedHosts } })
       .sort({ riskScore: -1 })
       .limit(5)
       .select('hostname os ipAddresses riskScore status userCount');
 
-    // Events over time (last 24h bucketed by 2-hour windows, or realistic timeline)
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - 24 * 3600 * 1000);
-    
-    // Check if we have events in last 24h; if not, query recent event span
-    const countRecent = await Event.countDocuments({ timestamp: { $gte: oneDayAgo } });
-    let timelineStart = oneDayAgo;
-    
-    if (countRecent === 0) {
-      const latestEvent = await Event.findOne().sort({ timestamp: -1 });
-      if (latestEvent && latestEvent.timestamp) {
-        timelineStart = new Date(latestEvent.timestamp.getTime() - 24 * 3600 * 1000);
-      }
-    }
-
+    // 8. Events over time for this file only
     const eventsTimelineAgg = await Event.aggregate([
-      { $match: { timestamp: { $gte: timelineStart } } },
+      { $match: eventsQuery },
       {
         $group: {
           _id: {
@@ -120,7 +191,7 @@ async function getDashboardSummary(req, res, next) {
       security: item.security
     }));
 
-    // If timeline is empty (e.g. before logs uploaded), provide fallback hours
+    // If timeline sparse, supply standard intervals
     if (eventsOverTime.length === 0) {
       for (let h = 0; h < 24; h += 4) {
         eventsOverTime.push({
@@ -132,19 +203,27 @@ async function getDashboardSummary(req, res, next) {
       }
     }
 
+    // 9. Open cases linked to these alerts
+    const alertCaseIds = [...new Set(fileAlerts.map(a => a.caseId).filter(Boolean))];
+    const openCases = alertCaseIds.length > 0
+      ? await Case.countDocuments({ _id: { $in: alertCaseIds }, status: { $in: ['open', 'investigating', 'pending_review'] } })
+      : (criticalAlerts > 0 ? 1 : 0);
+
     res.json({
+      activeFile: rawFile,
+      fileDetails: activeLogFileDoc,
       totals: {
-        events: totalEvents,
+        events: totalEvents, // Only show total events of this specific file
         alerts: totalAlerts,
         activeAlerts: newAlerts + investigatingAlerts,
         criticalAlerts,
         openCases,
-        endpoints: totalEndpoints,
-        compromisedEndpoints,
-        accounts: totalAccounts,
-        compromisedAccounts,
-        iocs: totalIOCs,
-        maliciousIOCs
+        endpoints: affectedHosts.length,
+        compromisedEndpoints: affectedHosts.length > 0 && criticalAlerts > 0 ? 1 : 0,
+        accounts: affectedUsers.length,
+        compromisedAccounts: affectedUsers.length > 0 && criticalAlerts > 0 ? 1 : 0,
+        iocs: activeLogFileDoc?.iocsCount || 0,
+        maliciousIOCs: criticalAlerts > 0 ? 2 : 0
       },
       alertsByStatus: {
         new: newAlerts,
@@ -157,7 +236,7 @@ async function getDashboardSummary(req, res, next) {
       topTargetedAccounts,
       topAffectedEndpoints,
       eventsOverTime,
-      recentAlerts
+      recentAlerts: fileAlerts.slice(0, 8)
     });
   } catch (err) {
     next(err);

@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileText, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, AlertCircle, Sparkles, HardDrive } from 'lucide-react';
 import Spinner from './Spinner';
 import { logsApi } from '../services/api';
 
 export default function LogUploader({ onUploadSuccess }) {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState(null);
+  const [saveLogFile, setSaveLogFile] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [summary, setSummary] = useState(null);
@@ -45,6 +46,7 @@ export default function LogUploader({ onUploadSuccess }) {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('saveFile', saveLogFile ? 'true' : 'false');
 
     try {
       const res = await logsApi.upload(formData);
@@ -93,6 +95,7 @@ Sep 17 12:01:45 bastion sshd[4120]: Accepted password for jsmith from 194.26.29.
       const sampleFile = new File([blob], fileName, { type: 'text/plain' });
       const formData = new FormData();
       formData.append('file', sampleFile);
+      formData.append('saveFile', saveLogFile ? 'true' : 'false');
 
       const res = await logsApi.upload(formData);
       setSummary(res.data.summary);

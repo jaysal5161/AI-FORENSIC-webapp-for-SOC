@@ -1,8 +1,9 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'soc_forensic_platform_super_secret_jwt_key_2026!';
-
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error('FATAL SECURITY ERROR: process.env.JWT_SECRET must be set and contain at least 32 characters.');
+}
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;

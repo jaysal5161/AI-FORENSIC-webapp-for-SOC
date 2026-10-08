@@ -42,5 +42,13 @@ const upload = multer({
 
 router.post('/upload', authenticate, authorize('admin', 'analyst'), upload.single('file'), logController.uploadLog);
 router.post('/parse-preview', authenticate, logController.parsePreview);
+router.get('/files', authenticate, logController.getUploadedFiles);
+router.get('/files/:id', authenticate, logController.getUploadedFileById);
+router.get('/files/:id/raw', authenticate, logController.getRawFileContent);
+router.get('/files/:id/download', authenticate, logController.downloadUploadedFile);
+router.delete('/files/:id', authenticate, authorize('admin', 'analyst'), logController.deleteUploadedFile);
+router.delete('/by-name/:fileName', authenticate, authorize('admin', 'analyst'), logController.deleteUploadedFileByName);
+router.post('/reset-all', authenticate, authorize('admin'), logController.resetAllData);
 
 module.exports = router;
+

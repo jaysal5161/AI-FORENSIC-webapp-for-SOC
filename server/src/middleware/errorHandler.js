@@ -12,10 +12,7 @@ const errorHandler = (err, req, res, next) => {
     message: err.message || 'An unexpected error occurred'
   };
 
-  if (process.env.NODE_ENV !== 'production') {
-    response.stack = err.stack;
-  }
-
+  // Prevent leaking internal call stacks or filesystem paths in API responses (OWASP A05 / API8)
   res.status(statusCode).json(response);
 };
 

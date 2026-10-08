@@ -96,5 +96,6 @@ eventSchema.index({ timestamp: -1 });
 eventSchema.index({ host: 1, timestamp: -1 });
 eventSchema.index({ sourceIP: 1, timestamp: -1 });
 eventSchema.index({ username: 1, timestamp: -1 });
+eventSchema.index({ rawFile: 1 });
 
 module.exports = mongoose.model('Event', eventSchema);

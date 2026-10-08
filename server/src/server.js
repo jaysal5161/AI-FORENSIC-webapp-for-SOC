@@ -3,6 +3,7 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const path = require('path');
 const fs = require('fs');
 
@@ -30,9 +31,9 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security Middleware
+// Security Middleware (OWASP A05 / API8)
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+  crossOriginResourcePolicy: { policy: 'same-origin' }
 }));
 
 const allowedOrigins = [
@@ -46,17 +47,22 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, true); // Permissive in dev mode
+      callback(new Error(`CORS policy violation: Origin '${origin}' is not authorized.`));
     }
   },
   credentials: true
 }));
 
-// Body parsers
+// Body parsers with limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Global lenient rate limiter
+// NoSQL Injection Sanitization (OWASP A03 / API1)
+app.use(mongoSanitize({
+  replaceWith: '_'
+}));
+
+// Global rate limiter (OWASP API4)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 2000,
@@ -65,12 +71,12 @@ const globalLimiter = rateLimit({
 });
 app.use('/api', globalLimiter);
 
-// Static uploads directory
+// Ensure uploads directory exists on disk for secure storage
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-app.use('/uploads', express.static(uploadDir));
+// Note: Unauthenticated static serving of /uploads removed for security (OWASP A01 / API1)
 
 // Health check
 app.get('/api/health', (req, res) => {

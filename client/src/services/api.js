@@ -47,7 +47,14 @@ export const logsApi = {
   upload: (formData) => api.post('/logs/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  parsePreview: (data) => api.post('/logs/parse-preview', data)
+  parsePreview: (data) => api.post('/logs/parse-preview', data),
+  getFiles: () => api.get('/logs/files'),
+  getFileById: (id) => api.get(`/logs/files/${id}`),
+  getRawContent: (id) => api.get(`/logs/files/${id}/raw`),
+  downloadFile: (id) => api.get(`/logs/files/${id}/download`, { responseType: 'blob' }),
+  deleteFile: (id, purgeEvents = true) => api.delete(`/logs/files/${id}?purgeEvents=${purgeEvents}`),
+  deleteFileByName: (fileName) => api.delete(`/logs/by-name/${encodeURIComponent(fileName)}`),
+  resetAll: () => api.post('/logs/reset-all')
 };
 
 // Events API
@@ -97,7 +104,11 @@ export const iocsApi = {
   createIOC: (data) => api.post('/iocs', data),
   updateIOC: (id, data) => api.patch(`/iocs/${id}`, data),
   deleteIOC: (id) => api.delete(`/iocs/${id}`),
-  lookup: (data) => api.post('/iocs/lookup', data)
+  lookup: (data) => api.post('/iocs/lookup', data),
+  executeSql: (query) => api.post('/iocs/sql', { query }),
+  generateAiQuery: (data) => api.post('/iocs/ai/generate', data),
+  getAiSchema: () => api.get('/iocs/ai/schema'),
+  getAiHistory: () => api.get('/iocs/ai/history')
 };
 
 // Endpoints API
@@ -151,7 +162,7 @@ export const reportsApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  getSummary: () => api.get('/dashboard/summary')
+  getSummary: (params) => api.get('/dashboard/summary', { params })
 };
 
 export default api;

@@ -27,9 +27,27 @@ const logger = winston.createLogger({
       filename: path.join(logDir, 'combined.log'),
       maxsize: 5242880,
       maxFiles: 5
+    }),
+    new winston.transports.File({
+      filename: path.join(logDir, 'audit.log'),
+      level: 'info',
+      maxsize: 10485760, // 10MB
+      maxFiles: 10
     })
   ]
 });
+
+// Dedicated structured audit log function for security and compliance (OWASP A09)
+logger.audit = function (action, meta = {}) {
+  logger.info(`[AUDIT] ${action}`, {
+    isAudit: true,
+    action,
+    timestamp: new Date().toISOString(),
+    ...meta
+  });
+};
+
+// Always log readable output to console in development
 
 // Always log readable output to console in development
 if (process.env.NODE_ENV !== 'production') {

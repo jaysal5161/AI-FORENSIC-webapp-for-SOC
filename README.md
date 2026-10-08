@@ -216,3 +216,37 @@ npm run dev
    - **Damage Assessment**: Document compromised data and business disruption.
    - **Analyst Review**: Check off validation items, enter findings, and click **Save Review Findings**.
    - **Final Report**: Compile the official report and click **Download Markdown** or **HTML Print View**.
+7. **AI Natural Language to SQL Assistant**: In **Threat Intelligence** (`/threat-intel`), ask plain-English questions (*"Which IP address generated the highest number of events?"*, *"Which user has the highest number of failed login attempts?"*). Review the schema-aware generated SQL, click **Insert Query into Console** to edit, or **Run Query** to execute immediately against live MongoDB telemetry and export results.
+
+---
+
+## 7. AI Natural Language to SQL Assistant
+
+Integrated directly into the **Threat Intelligence** module, the AI Assistant enables SOC analysts to query enterprise telemetry and global threat intelligence using plain English:
+
+- **Schema Discovery**: Automatic inspection of queryable collections (`events`, `alerts`, `indicators`, `threat_intel`, `cases`), permitted columns, data types, timestamps, and indexes. Zero hallucinations.
+- **Dual-Engine Architecture**: Configurable external LLM provider (`GEMINI_API_KEY`, `OPENAI_API_KEY`) with automatic fallback to a built-in deterministic SOC NLP engine.
+- **Supported SQL Dialect**: Read-only `SELECT`, `WHERE`, `AND`/`OR`, `IN`, `LIKE`, `IS NULL`/`IS NOT NULL`, `COUNT(*)`, `COUNT(DISTINCT)`, `GROUP BY`, `HAVING`, `ORDER BY`, `LIMIT`, aggregations (`AVG`, `SUM`, `MIN`, `MAX`), and automated `Date` literal parsing.
+- **Contextual Follow-Ups**: Remembers conversation context for iterative investigation (*"Show only the failed events"*, *"Filter to the last 24 hours"*, *"Now show the top 5"*).
+- **One-Click Execution**: Direct **Run Query** execution against live database with integrated results table and CSV/JSON export, plus **Insert Query into Console** for manual review and editing.
+
+---
+
+## 8. OWASP Web & API Security Integrity
+
+The platform incorporates enterprise-grade defense-in-depth protections verified by automated test suites:
+
+- **Broken Access Control & BFLA (A01 / API1 / API5)**: Strict JWT authentication, RBAC authorization, role escalation defense on registration, and direct `/uploads` traversal shields.
+- **Cryptographic Failures (A02 / API2)**: Minimum 32-character JWT secrets, bcrypt hashing with salt rounds = 10, cryptographic token signature verification.
+- **Injection Immunity (A03 / API1 / API10)**: NoSQL sanitization via `express-mongo-sanitize`, SQL allowlisting blocking destructive keywords (`DROP`, `DELETE`, `UPDATE`, `INSERT`), ReDoS protection via `escapeRegex`, and stored XSS entity encoding.
+- **Mass Assignment Defense (API3)**: Strict update field allowlists across all asset, alert, and account controllers.
+- **Resource Consumption Caps (API4)**: Global rate limiter (2,000 req / 15m), SQL query row limits (max 500), pagination caps (max 1,000), and query execution timeouts (`maxTimeMS: 5000`).
+- **Security Logging & Monitoring (A09)**: Structured Winston audit logs recording all authentication events, SQL queries, AI generations, and administrative actions in `logs/audit.log`.
+
+Automated test suites:
+```bash
+node test_full_owasp_audit.js       # 21/21 OWASP Top 10 & API Security checks pass
+node test_e2e_ai_sql_api.js         # 14/14 AI NL-to-SQL core questions pass
+node test_rapid_lookup_and_sql.js   # 15/15 rapid lookup & SQL queries pass
+node verify.js                       # 10/10 end-to-end platform workflows pass
+```

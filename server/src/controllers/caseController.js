@@ -9,20 +9,22 @@ const ImpactAssessment = require('../models/ImpactAssessment');
 const timelineService = require('../services/timelineService');
 const attackChainService = require('../services/attackChainService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/sanitize');
 
 async function getCases(req, res, next) {
   try {
     const { status, priority, phase, search } = req.query;
     const query = {};
 
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
-    if (phase) query.phase = phase;
-    if (search) {
+    if (status && typeof status === 'string') query.status = status;
+    if (priority && typeof priority === 'string') query.priority = priority;
+    if (phase && typeof phase === 'string') query.phase = phase;
+    if (search && typeof search === 'string') {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { caseId: new RegExp(search, 'i') },
-        { title: new RegExp(search, 'i') },
-        { description: new RegExp(search, 'i') }
+        { caseId: new RegExp(safeSearch, 'i') },
+        { title: new RegExp(safeSearch, 'i') },
+        { description: new RegExp(safeSearch, 'i') }
       ];
     }
 
@@ -64,14 +66,19 @@ async function createCase(req, res, next) {
     const year = new Date().getFullYear();
     const count = await Case.countDocuments();
     const seq = String(count + 1).padStart(4, '0');
-    const caseId = req.body.caseId || `CASE-${year}-${seq}`;
+    const caseId = req.body.caseId ? String(req.body.caseId) : `CASE-${year}-${seq}`;
+
+    // Prevent Mass Assignment (OWASP API3)
+    const { title, description, priority, status, phase, assignedTo } = req.body;
 
     const newCase = await Case.create({
-      ...req.body,
+      title: title || `Incident Case ${caseId}`,
+      description: description || '',
+      priority: priority || 'medium',
+      status: status || 'open',
+      phase: phase || 'ingestion',
       caseId,
-      assignedTo: req.body.assignedTo || (req.user ? req.user._id : null),
-      status: req.body.status || 'open',
-      phase: req.body.phase || 'ingestion'
+      assignedTo: assignedTo || (req.user ? req.user._id : null)
     });
 
     // Create initial attack chain
@@ -87,6 +94,13 @@ async function createCase(req, res, next) {
     });
     newCase.impactAssessmentId = impact._id;
     await newCase.save();
+
+    logger.audit('CASE_CREATED', {
+      caseId: newCase.caseId,
+      caseDocId: newCase._id,
+      createdBy: req.user ? req.user._id : null,
+      ip: req.ip
+    });
 
     res.status(201).json(newCase);
   } catch (err) {
@@ -110,8 +124,25 @@ async function updateCase(req, res, next) {
       }
     }
 
-    const updated = await Case.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    // Whitelist allowed update fields to prevent mass assignment (OWASP API3)
+    const allowedUpdates = {};
+    if (req.body.title !== undefined) allowedUpdates.title = req.body.title;
+    if (req.body.description !== undefined) allowedUpdates.description = req.body.description;
+    if (req.body.priority !== undefined) allowedUpdates.priority = req.body.priority;
+    if (req.body.status !== undefined) allowedUpdates.status = req.body.status;
+    if (req.body.phase !== undefined) allowedUpdates.phase = req.body.phase;
+    if (req.body.assignedTo !== undefined) allowedUpdates.assignedTo = req.body.assignedTo;
+    if (req.body.review !== undefined) allowedUpdates.review = req.body.review;
+
+    const updated = await Case.findByIdAndUpdate(req.params.id, { $set: allowedUpdates }, { new: true })
       .populate('assignedTo', 'fullName username email role');
+
+    logger.audit('CASE_UPDATED', {
+      caseId: existing.caseId,
+      updatedBy: req.user ? req.user._id : null,
+      updates: Object.keys(allowedUpdates),
+      ip: req.ip
+    });
 
     res.json(updated);
   } catch (err) {

@@ -25,7 +25,7 @@ export default function Sidebar() {
 
   const navItems = [
     { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { label: 'Log Ingestion', path: '/logs', icon: UploadCloud },
+    { label: 'Upload & Log Files', path: '/logs', icon: UploadCloud },
     { label: 'Event Telemetry', path: '/events', icon: FileCode },
     { label: 'Detection Rules', path: '/rules', icon: Sliders },
     { label: 'Alerts Queue', path: '/alerts', icon: Bell },

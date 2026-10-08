@@ -24,8 +24,23 @@ const storage = multer.diskStorage({
   }
 });
 
+const ALLOWED_EVIDENCE_EXTENSIONS = ['.pcap', '.pcapng', '.log', '.txt', '.csv', '.json', '.pdf', '.png', '.jpg', '.jpeg', '.zip', '.bin'];
+const DISALLOWED_EVIDENCE_EXTENSIONS = ['.html', '.htm', '.svg', '.js', '.mjs', '.sh', '.bat', '.cmd', '.ps1', '.exe', '.php', '.asp', '.aspx', '.jar'];
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (DISALLOWED_EVIDENCE_EXTENSIONS.includes(ext)) {
+    return cb(new Error(`File extension '${ext}' is prohibited due to security policy`), false);
+  }
+  if (!ALLOWED_EVIDENCE_EXTENSIONS.includes(ext)) {
+    return cb(new Error(`Only forensic artifacts (${ALLOWED_EVIDENCE_EXTENSIONS.join(', ')}) are permitted`), false);
+  }
+  cb(null, true);
+};
+
 const upload = multer({
   storage,
+  fileFilter,
   limits: { fileSize: 25 * 1024 * 1024 }
 });
 

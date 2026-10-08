@@ -7,7 +7,8 @@ import {
   Shield,
   Search,
   Activity,
-  ChevronDown
+  ChevronDown,
+  UploadCloud
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useUiStore } from '../stores/uiStore';
@@ -77,6 +78,16 @@ export default function Navbar() {
           <Activity className="w-3.5 h-3.5 animate-pulse" />
           <span>DEFCON 4 // ACTIVE</span>
         </div>
+
+        {/* Quick Upload Logs Link */}
+        <button
+          onClick={() => navigate('/logs')}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-mono text-xs transition-all shadow-[0_0_10px_rgba(6,182,212,0.1)]"
+          title="Upload & Ingest Security Logs"
+        >
+          <UploadCloud className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Upload Logs</span>
+        </button>
 
         {/* Notifications Bell */}
         <button

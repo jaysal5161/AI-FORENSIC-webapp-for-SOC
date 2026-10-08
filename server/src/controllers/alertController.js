@@ -9,23 +9,25 @@ const correlationService = require('../services/correlationService');
 const timelineService = require('../services/timelineService');
 const attackChainService = require('../services/attackChainService');
 const logger = require('../utils/logger');
+const { escapeRegex } = require('../utils/sanitize');
 
 async function getAlerts(req, res, next) {
   try {
     const { status, severity, assignedTo, search } = req.query;
     const query = {};
 
-    if (status) query.status = status;
-    if (severity) query.severity = severity;
-    if (assignedTo) query.assignedTo = assignedTo;
-    if (search) {
+    if (status && typeof status === 'string') query.status = status;
+    if (severity && typeof severity === 'string') query.severity = severity;
+    if (assignedTo && typeof assignedTo === 'string') query.assignedTo = assignedTo;
+    if (search && typeof search === 'string') {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { title: new RegExp(search, 'i') },
-        { alertId: new RegExp(search, 'i') },
-        { description: new RegExp(search, 'i') },
-        { host: new RegExp(search, 'i') },
-        { username: new RegExp(search, 'i') },
-        { sourceIP: new RegExp(search, 'i') }
+        { title: new RegExp(safeSearch, 'i') },
+        { alertId: new RegExp(safeSearch, 'i') },
+        { description: new RegExp(safeSearch, 'i') },
+        { host: new RegExp(safeSearch, 'i') },
+        { username: new RegExp(safeSearch, 'i') },
+        { sourceIP: new RegExp(safeSearch, 'i') }
       ];
     }
 
@@ -58,7 +60,14 @@ async function getAlertById(req, res, next) {
 
 async function updateAlert(req, res, next) {
   try {
-    const alert = await Alert.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    // Prevent Mass Assignment (OWASP API3)
+    const allowedUpdates = {};
+    if (req.body.status !== undefined) allowedUpdates.status = req.body.status;
+    if (req.body.severity !== undefined) allowedUpdates.severity = req.body.severity;
+    if (req.body.assignedTo !== undefined) allowedUpdates.assignedTo = req.body.assignedTo;
+    if (req.body.notes !== undefined) allowedUpdates.notes = req.body.notes;
+
+    const alert = await Alert.findByIdAndUpdate(req.params.id, { $set: allowedUpdates }, { new: true })
       .populate('assignedTo', 'fullName username email');
     if (!alert) return res.status(404).json({ error: 'NotFound', message: 'Alert not found' });
     res.json(alert);

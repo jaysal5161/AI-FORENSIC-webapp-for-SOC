@@ -206,12 +206,16 @@ function exportReportToMarkdown(report) {
 }
 
 function exportReportToHTML(report) {
+  const { escapeHtml } = require('../utils/sanitize');
   const md = exportReportToMarkdown(report);
+  const safeTitle = escapeHtml(report.title || 'Forensic Incident Report');
+  const safeMd = escapeHtml(md);
+
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>${report.title}</title>
+  <title>${safeTitle}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 900px; margin: 40px auto; padding: 0 20px; }
     h1 { color: #0f172a; border-bottom: 2px solid #0284c7; padding-bottom: 8px; }
@@ -229,7 +233,7 @@ function exportReportToHTML(report) {
   <div style="background: #0f172a; color: #38bdf8; padding: 12px 20px; border-radius: 6px; margin-bottom: 20px;">
     <strong>AEGIS FORENSIC PLATFORM</strong> &bull; OFFICIAL INCIDENT REPORT
   </div>
-  <pre style="white-space: pre-wrap; font-family: inherit;">${md}</pre>
+  <pre style="white-space: pre-wrap; font-family: inherit;">${safeMd}</pre>
 </body>
 </html>`;
 }

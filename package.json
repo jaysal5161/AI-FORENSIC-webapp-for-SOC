@@ -7,6 +7,10 @@
     "install:all": "npm --prefix server install && npm --prefix client install",
     "seed": "npm --prefix server run seed",
     "server": "npm --prefix server run dev",
-    "client": "npm --prefix client run dev"
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan.bold,magenta.bold\" \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

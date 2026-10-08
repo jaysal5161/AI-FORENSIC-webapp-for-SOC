@@ -1,0 +1,123 @@
+[
+  {
+    "timestamp": "2026-10-08T09:00:00Z",
+    "event_id": 4624,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "john",
+    "source_ip": "192.168.1.20",
+    "event_type": "Login",
+    "status": "Success",
+    "message": "Successful network logon"
+  },
+  {
+    "timestamp": "2026-10-08T09:01:00Z",
+    "event_id": 4625,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "admin",
+    "source_ip": "192.168.1.99",
+    "event_type": "Login",
+    "status": "Failure",
+    "message": "Invalid password"
+  },
+  {
+    "timestamp": "2026-10-08T09:01:10Z",
+    "event_id": 4625,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "admin",
+    "source_ip": "192.168.1.99",
+    "event_type": "Login",
+    "status": "Failure",
+    "message": "Invalid password"
+  },
+  {
+    "timestamp": "2026-10-08T09:01:20Z",
+    "event_id": 4625,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "admin",
+    "source_ip": "192.168.1.99",
+    "event_type": "Login",
+    "status": "Failure",
+    "message": "Invalid password"
+  },
+  {
+    "timestamp": "2026-10-08T09:02:00Z",
+    "event_id": 4740,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "admin",
+    "source_ip": "192.168.1.99",
+    "event_type": "AccountLockout",
+    "status": "Warning",
+    "message": "Account locked out"
+  },
+  {
+    "timestamp": "2026-10-08T09:05:00Z",
+    "event_id": 4768,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "john",
+    "source_ip": "192.168.1.20",
+    "event_type": "Kerberos",
+    "status": "Success",
+    "message": "TGT requested"
+  },
+  {
+    "timestamp": "2026-10-08T09:06:00Z",
+    "event_id": 4769,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "john",
+    "source_ip": "192.168.1.20",
+    "event_type": "Kerberos",
+    "status": "Success",
+    "message": "Service ticket requested"
+  },
+  {
+    "timestamp": "2026-10-08T09:10:00Z",
+    "event_id": 4720,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "newuser",
+    "source_ip": "192.168.1.10",
+    "event_type": "AccountCreated",
+    "status": "Success",
+    "message": "New domain user created"
+  },
+  {
+    "timestamp": "2026-10-08T09:12:00Z",
+    "event_id": 4728,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "newuser",
+    "source_ip": "192.168.1.10",
+    "event_type": "GroupChange",
+    "status": "Warning",
+    "message": "User added to Domain Admins"
+  },
+  {
+    "timestamp": "2026-10-08T09:13:00Z",
+    "event_id": 4672,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "newuser",
+    "source_ip": "192.168.1.10",
+    "event_type": "PrivilegeLogon",
+    "status": "Warning",
+    "message": "Special privileges assigned"
+  },
+  {
+    "timestamp": "2026-10-08T09:15:00Z",
+    "event_id": 1102,
+    "hostname": "DC01",
+    "domain": "corp.local",
+    "username": "admin",
+    "source_ip": "192.168.1.10",
+    "event_type": "LogCleared",
+    "status": "Critical",
+    "message": "Security audit log cleared"
+  }
+]

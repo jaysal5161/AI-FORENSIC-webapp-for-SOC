@@ -72,6 +72,7 @@ async function runDetectionEngine(newEvents = null) {
                 eventType: 'authentication',
                 count: evList.length,
                 matchingEvents: matchingIds,
+                rawFile: sampleEvent.rawFile || (newEvents && newEvents[0]?.rawFile) || '',
                 ruleId: rule._id,
                 ruleName: rule.name,
                 mitreTechniqueId: rule.mitreTechniqueId || 'T1078'
@@ -141,6 +142,7 @@ async function runDetectionEngine(newEvents = null) {
               eventType: sample.eventType || 'other',
               count: evGroup.length,
               matchingEvents: evGroup.map(e => e._id),
+              rawFile: sample.rawFile || (newEvents && newEvents[0]?.rawFile) || '',
               ruleId: rule._id,
               ruleName: rule.name,
               mitreTechniqueId: rule.mitreTechniqueId || ''
