@@ -72,8 +72,62 @@ function copyDirSync(src, dest) {
   }
 }
 
-// 3. Mirror distribution assets
-console.log('\n[AEGIS Build] Step 3: Mirroring build artifacts to deployment targets...');
+// 3. Create entrypoint files in dist directory for Vercel Express builder
+console.log('\n[AEGIS Build] Step 3: Generating Vercel entrypoints in dist...');
+const entrypointContent = `const path = require('path');
+const fs = require('fs');
+const express = require('express');
+
+let app;
+const candidateServers = [
+  path.resolve(__dirname, '../../server/src/server.js'),
+  path.resolve(__dirname, '../src/server.js'),
+  path.resolve(__dirname, '../../src/server.js')
+];
+
+for (const p of candidateServers) {
+  if (fs.existsSync(p)) {
+    try {
+      app = require(p);
+      break;
+    } catch (e) {}
+  }
+}
+
+if (!app) {
+  app = express();
+}
+
+const distDir = __dirname;
+app.use(express.static(distDir));
+app.get('*', (req, res, next) => {
+  if (req.url && req.url.startsWith('/api')) {
+    return next();
+  }
+  const indexPath = path.join(distDir, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.status(404).send('Not Found');
+});
+
+module.exports = app;
+`;
+
+if (fs.existsSync(clientDist)) {
+  fs.writeFileSync(path.join(clientDist, 'index.js'), entrypointContent, 'utf8');
+  fs.writeFileSync(path.join(clientDist, 'server.js'), "module.exports = require('./index');\n", 'utf8');
+  fs.writeFileSync(path.join(clientDist, 'app.js'), "module.exports = require('./index');\n", 'utf8');
+
+  const srcSubdir = path.join(clientDist, 'src');
+  if (!fs.existsSync(srcSubdir)) fs.mkdirSync(srcSubdir, { recursive: true });
+  fs.writeFileSync(path.join(srcSubdir, 'index.js'), "module.exports = require('../index');\n", 'utf8');
+  fs.writeFileSync(path.join(srcSubdir, 'server.js'), "module.exports = require('../index');\n", 'utf8');
+  fs.writeFileSync(path.join(srcSubdir, 'app.js'), "module.exports = require('../index');\n", 'utf8');
+}
+
+// 4. Mirror distribution assets
+console.log('\n[AEGIS Build] Step 4: Mirroring build artifacts to deployment targets...');
 if (fs.existsSync(clientDist)) {
   copyDirSync(clientDist, serverDist);
   copyDirSync(clientDist, serverClientDist);

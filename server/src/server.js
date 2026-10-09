@@ -120,6 +120,24 @@ app.use('/api/review', reviewRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
+// Serve frontend SPA static assets if built
+const candidateDistDirs = [
+  path.join(__dirname, '../dist'),
+  path.join(__dirname, '../client/dist'),
+  path.join(__dirname, '../../client/dist')
+];
+
+for (const dir of candidateDistDirs) {
+  if (fs.existsSync(path.join(dir, 'index.html'))) {
+    app.use(express.static(dir));
+    app.get('*', (req, res, next) => {
+      if (req.url && req.url.startsWith('/api')) return next();
+      res.sendFile(path.join(dir, 'index.html'));
+    });
+    break;
+  }
+}
+
 // Error Handling Middleware
 app.use(errorHandler);
 
