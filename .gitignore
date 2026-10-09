@@ -3,7 +3,9 @@ node_modules/
 */node_modules/
 
 # Local database data & large binaries
-server/data/
+server/data/db/
+!server/data/soc_platform.sqlite
+!server/data/soc_platform.json
 server/bin/
 
 # Uploads & Temp files

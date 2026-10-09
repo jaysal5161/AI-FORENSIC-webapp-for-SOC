@@ -1,6 +1,8 @@
 # Local database and binaries
 server/bin/
-server/data/
+server/data/db/
+!server/data/soc_platform.sqlite
+!server/data/soc_platform.json
 server/logs/
 logs/
 .tmp/

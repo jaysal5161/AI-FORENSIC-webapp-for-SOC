@@ -26,7 +26,7 @@ async function runVerification() {
 
   // Test 1: Health Check
   const health = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/health',
     method: 'GET'
@@ -35,7 +35,7 @@ async function runVerification() {
 
   // Test 2: Login as Analyst
   const loginRes = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/auth/login',
     method: 'POST',
@@ -56,7 +56,7 @@ async function runVerification() {
 
   // Test 3: Dashboard Summary
   const dashRes = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/dashboard/summary',
     method: 'GET',
@@ -66,7 +66,7 @@ async function runVerification() {
 
   // Test 4: Alerts Queue
   const alertsRes = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/alerts',
     method: 'GET',
@@ -76,7 +76,7 @@ async function runVerification() {
 
   // Test 5: Cases List
   const casesRes = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/cases',
     method: 'GET',
@@ -89,7 +89,7 @@ async function runVerification() {
   // Test 6: Case Detail (Full 11 tabs data)
   if (demoCase) {
     const caseDetailRes = await request({
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 5000,
       path: `/api/cases/${demoCase._id}`,
       method: 'GET',
@@ -99,7 +99,7 @@ async function runVerification() {
 
     // Test Timeline
     const timelineRes = await request({
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 5000,
       path: `/api/timeline/case/${demoCase._id}`,
       method: 'GET',
@@ -109,7 +109,7 @@ async function runVerification() {
 
     // Test Attack Chain
     const chainRes = await request({
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 5000,
       path: `/api/attack-chain/case/${demoCase._id}`,
       method: 'GET',
@@ -119,7 +119,7 @@ async function runVerification() {
 
     // Test Impact Assessment
     const impactRes = await request({
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 5000,
       path: `/api/impact/case/${demoCase._id}`,
       method: 'GET',
@@ -129,7 +129,7 @@ async function runVerification() {
 
     // Test Report
     const reportRes = await request({
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 5000,
       path: `/api/reports/case/${demoCase._id}`,
       method: 'GET',
@@ -140,7 +140,7 @@ async function runVerification() {
 
   // Test 7: Events Explorer
   const eventsRes = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/events?limit=5',
     method: 'GET',
@@ -150,7 +150,7 @@ async function runVerification() {
 
   // Test 8: Detection Rules
   const rulesRes = await request({
-    host: 'localhost',
+    host: '127.0.0.1',
     port: 5000,
     path: '/api/rules',
     method: 'GET',
