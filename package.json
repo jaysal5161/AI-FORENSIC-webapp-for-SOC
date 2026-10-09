@@ -4,8 +4,8 @@
   "private": true,
   "description": "SOC Forensic Investigation Platform - Full-stack MERN Application",
   "scripts": {
-    "build": "npm --prefix client install && npm --prefix client run build",
-    "vercel-build": "npm --prefix client install && npm --prefix client run build",
+    "build": "node scripts/build.js",
+    "vercel-build": "node scripts/build.js",
     "install:all": "npm install && npm --prefix server install && npm --prefix client install",
     "seed": "npm --prefix server run seed",
     "server": "npm --prefix server run dev",

@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "node scripts/build.js",
+  "buildCommand": "node client/build-client.js",
   "outputDirectory": "client/dist",
   "functions": {
     "api/index.js": {
       "memory": 1024,
       "maxDuration": 30,
-      "includeFiles": "server/src/**"
+      "includeFiles": "src/**"
     }
   },
   "rewrites": [

@@ -257,12 +257,17 @@ node verify.js                       # 10/10 end-to-end platform workflows pass
 
 The application is structured for 1-click deployment on [Vercel](https://vercel.com):
 - **Frontend**: Built with Vite into `client/dist`, served globally with client-side SPA routing (`/(.*)` -> `/index.html`).
-- **Backend**: Express API served via Vercel Serverless Function (`api/index.js`) routed seamlessly through `/api/(.*)`.
+- **Backend**: Express API served via Vercel Serverless Function (`api/index.js` or `server/api/index.js`) routed seamlessly through `/api/(.*)`.
+- **Hybrid Bridge**: Fully supports deployment whether Vercel's **Root Directory** is configured as `./` (repository root) or `server`!
 
 ### Step 1: Import Project to Vercel
 1. Push this repository to GitHub or GitLab.
 2. In the Vercel dashboard, click **"Add New..." -> "Project"** and import the repository.
-3. Leave the **Root Directory** as `./` (default).
+3. **Root Directory**:
+   - **Recommended**: Leave the Root Directory as `./` (default repository root).
+   - **Alternative**: If you configured Root Directory as `server`, the built-in bridge (`server/client/package.json` + `server/vercel.json`) automatically routes and builds the client and API seamlessly.
+4. **Build Settings**:
+   - Leave the default settings or let `vercel.json` run `node scripts/build.js` / `npm run build`.
 
 ### Step 2: Configure Environment Variables in Vercel
 In the Vercel project settings under **Environment Variables**, add:
@@ -273,7 +278,8 @@ In the Vercel project settings under **Environment Variables**, add:
 
 ### Step 3: Deploy
 Click **Deploy**. Vercel will:
-1. Run `npm install` at root to prepare dependencies.
-2. Run `npm --prefix client install && npm --prefix client run build` to compile the React application.
-3. Package `api/index.js` as an optimized Node.js serverless function.
+1. Prepare dependencies.
+2. Run `scripts/build.js` to compile the Vite React frontend and mirror artifacts to distribution targets.
+3. Package the Express API as an optimized serverless function.
+
 

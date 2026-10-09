@@ -1,0 +1,14 @@
+# Local database and binaries
+bin/
+data/
+logs/
+.tmp/
+uploads/
+
+# Test and benchmark scripts
+*.test.js
+test_*.js
+
+# Local environment files
+.env.local
+.env.*.local

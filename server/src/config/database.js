@@ -100,10 +100,15 @@ async function connectDB() {
     }
   }
 
-  // 3. Fallback to MongoMemoryServer
+  // 3. Fallback to MongoMemoryServer (local dev only)
   try {
     logger.info('Attempting fallback to embedded MongoMemoryServer...');
-    const { MongoMemoryServer } = require('mongodb-memory-server');
+    let MongoMemoryServer;
+    try {
+      MongoMemoryServer = require('mongodb-memory-server').MongoMemoryServer;
+    } catch (importErr) {
+      throw new Error('mongodb-memory-server package is not installed. Please set MONGO_URI.');
+    }
     memoryServer = await MongoMemoryServer.create({
       instance: {
         dbName: 'soc_platform'

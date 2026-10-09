@@ -1,0 +1,9 @@
+{
+  "name": "soc-platform-client-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bridge proxy for Vercel builds targeting server subdirectory",
+  "scripts": {
+    "build": "node build-client.js"
+  }
+}
