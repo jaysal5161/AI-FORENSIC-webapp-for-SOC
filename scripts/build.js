@@ -104,6 +104,9 @@ app.get('*', (req, res, next) => {
   if (req.url && req.url.startsWith('/api')) {
     return next();
   }
+  if (req.url && (req.url.startsWith('/assets/') || req.url.includes('.'))) {
+    return next();
+  }
   const indexPath = path.join(distDir, 'index.html');
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);

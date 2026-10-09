@@ -132,6 +132,7 @@ for (const dir of candidateDistDirs) {
     app.use(express.static(dir));
     app.get('*', (req, res, next) => {
       if (req.url && req.url.startsWith('/api')) return next();
+      if (req.url && (req.url.startsWith('/assets/') || req.url.includes('.'))) return next();
       res.sendFile(path.join(dir, 'index.html'));
     });
     break;

@@ -6,7 +6,7 @@
     "api/index.js": {
       "memory": 1024,
       "maxDuration": 30,
-      "includeFiles": "src/**"
+      "includeFiles": "src/**,data/**,client/dist/**,dist/**"
     }
   },
   "rewrites": [
@@ -15,7 +15,11 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
