@@ -5,13 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AEGIS // SOC Forensic Platform</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https: http: ws: wss:; object-src 'none'; base-uri 'self';" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
-  <body class="bg-[#0a0d14] text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-black">
-    <div id="root"></div>
+  <body class="bg-[#0a0d14] text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-black" style="background-color: #0a0d14; color: #f1f5f9; margin: 0;">
+    <div id="root">
+      <div style="display:flex;height:100vh;align-items:center;justify-content:center;background-color:#0a0d14;color:#06b6d4;font-family:Inter,system-ui,sans-serif;flex-direction:column;gap:12px;">
+        <div style="width:36px;height:36px;border:3px solid #1e293b;border-top-color:#06b6d4;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        <div style="font-size:13px;letter-spacing:2px;font-weight:600;color:#94a3b8;text-transform:uppercase;">AEGIS // Initializing Platform...</div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
