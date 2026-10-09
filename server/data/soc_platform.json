@@ -8,7 +8,8 @@
       "email": "admin@soc.corp",
       "_id": "a8d05f04973ae0fdfe084b0d",
       "createdAt": "2026-10-09T06:55:39.475Z",
-      "updatedAt": "2026-10-09T06:55:39.475Z"
+      "updatedAt": "2026-10-09T08:53:53.398Z",
+      "lastLogin": "2026-10-09T08:53:53.398Z"
     },
     "c60e9e037711d00d5f9cf36b": {
       "username": "analyst",
@@ -18,8 +19,8 @@
       "email": "analyst@soc.corp",
       "_id": "c60e9e037711d00d5f9cf36b",
       "createdAt": "2026-10-09T06:55:39.476Z",
-      "updatedAt": "2026-10-09T07:22:16.420Z",
-      "lastLogin": "2026-10-09T07:22:16.420Z"
+      "updatedAt": "2026-10-09T08:53:53.333Z",
+      "lastLogin": "2026-10-09T08:53:53.333Z"
     },
     "a47dac05dbe4f8902a9b64be": {
       "username": "viewer",
@@ -30,6 +31,26 @@
       "_id": "a47dac05dbe4f8902a9b64be",
       "createdAt": "2026-10-09T06:55:39.476Z",
       "updatedAt": "2026-10-09T06:55:39.476Z"
+    },
+    "806d0aa8715b4ae577390dc0": {
+      "username": "sec_audit_1791535859667",
+      "passwordHash": "$2a$10$AhsaKbNM.T3JeBOYRULnlOZQzAAggsGHMO0hMc4h8pKtyTLwQ9jbm",
+      "fullName": "Auditor Test",
+      "email": "sec_audit_1791535859667@sec.audit",
+      "role": "viewer",
+      "_id": "806d0aa8715b4ae577390dc0",
+      "createdAt": "2026-10-09T08:50:59.731Z",
+      "updatedAt": "2026-10-09T08:50:59.731Z"
+    },
+    "261f835bca35e3f95dee6de6": {
+      "username": "sec_audit_1791536033404",
+      "passwordHash": "$2a$10$u/vnfIo0WX1un21wVlymC.yAsKQ7xKdgP7O4U0aXH5sbeZzMco.oK",
+      "fullName": "Auditor Test",
+      "email": "sec_audit_1791536033404@sec.audit",
+      "role": "viewer",
+      "_id": "261f835bca35e3f95dee6de6",
+      "createdAt": "2026-10-09T08:53:53.464Z",
+      "updatedAt": "2026-10-09T08:53:53.464Z"
     }
   },
   "detection_rules": {
@@ -9994,8 +10015,9 @@
       "riskScore": 45,
       "status": "suspicious",
       "createdAt": "2026-10-09T06:55:39.513Z",
-      "updatedAt": "2026-10-09T06:55:39.547Z",
-      "_id": "074ec0b95c5d42cf97793193"
+      "updatedAt": "2026-10-09T08:53:53.503Z",
+      "_id": "074ec0b95c5d42cf97793193",
+      "notes": "Audited by security team"
     },
     "453f490dcdee6239ddcd4fb7": {
       "username": "dwight",

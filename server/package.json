@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "node src/server.js",
     "seed": "node seed/seed.js",
+    "test": "node tests/verify.js && node tests/security_audit.js",
     "build": "node client/build-client.js",
     "vercel-build": "node client/build-client.js"
   },

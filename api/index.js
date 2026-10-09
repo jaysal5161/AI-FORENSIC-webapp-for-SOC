@@ -5,10 +5,10 @@ module.exports = async (req, res) => {
   try {
     await connectDB();
   } catch (err) {
-    console.error('[Vercel Serverless] Database connection error:', err);
+    console.error('[Vercel Serverless] Database initialization error:', err);
     return res.status(500).json({
-      error: 'DatabaseConnectionError',
-      message: 'Failed to connect to database. Please check MONGO_URI in Vercel environment variables.'
+      error: 'DatabaseInitializationError',
+      message: 'Failed to initialize database engine.'
     });
   }
 

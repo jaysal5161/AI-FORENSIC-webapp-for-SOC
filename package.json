@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "vercel-build": "node scripts/build.js",
+    "test": "node server/tests/verify.js && node server/tests/security_audit.js",
     "install:all": "npm install && npm --prefix server install && npm --prefix client install",
     "seed": "npm --prefix server run seed",
     "server": "npm --prefix server run dev",

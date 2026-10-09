@@ -7,9 +7,10 @@ const errorHandler = (err, req, res, next) => {
   });
 
   const statusCode = err.statusCode || err.status || 500;
+  const isProd = process.env.NODE_ENV === 'production';
   const response = {
     error: err.name || 'InternalServerError',
-    message: err.message || 'An unexpected error occurred'
+    message: (statusCode === 500 && isProd) ? 'An unexpected internal error occurred' : (err.message || 'An unexpected error occurred')
   };
 
   // Prevent leaking internal call stacks or filesystem paths in API responses (OWASP A05 / API8)

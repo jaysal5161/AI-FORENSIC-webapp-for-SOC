@@ -305,6 +305,14 @@ class Query {
     return this;
   }
 
+  lean() {
+    return this;
+  }
+
+  maxTimeMS(ms) {
+    return this;
+  }
+
   async exec() {
     const table = getTable(this.model.tableName);
     let records = [];

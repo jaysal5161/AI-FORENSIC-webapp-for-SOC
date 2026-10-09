@@ -44,16 +44,23 @@ app.use(helmet({
 const allowedOrigins = [
   process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS policy violation: Origin '${origin}' is not authorized.`));
-    }
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    try {
+      const url = new URL(origin);
+      if (url.hostname === 'vercel.app' || url.hostname.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+    } catch (e) {}
+    const err = new Error(`CORS policy violation: Origin '${origin}' is not authorized.`);
+    err.statusCode = 403;
+    callback(err);
   },
   credentials: true
 }));

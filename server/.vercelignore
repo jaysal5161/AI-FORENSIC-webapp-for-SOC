@@ -8,6 +8,7 @@ logs/
 uploads/
 
 # Test and benchmark scripts
+tests/
 *.test.js
 test_*.js
 

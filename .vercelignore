@@ -9,6 +9,8 @@ logs/
 server/uploads/
 
 # Test and benchmark scripts
+tests/
+server/tests/
 *.test.js
 test_*.js
 server/test_*.js
