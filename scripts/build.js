@@ -56,6 +56,15 @@ try {
   process.exit(1);
 }
 
+// 2.5 Post-process dist/index.html to strip crossorigin attributes that trigger CORS blocks in browsers
+const distIndexPath = path.join(clientDist, 'index.html');
+if (fs.existsSync(distIndexPath)) {
+  let html = fs.readFileSync(distIndexPath, 'utf8');
+  html = html.replace(/\scrossorigin(="[^"]*")?/gi, '');
+  fs.writeFileSync(distIndexPath, html, 'utf8');
+  console.log('[AEGIS Build] Successfully sanitized dist/index.html (crossorigin removed)');
+}
+
 // Helper to recursively copy directories
 function copyDirSync(src, dest) {
   if (!fs.existsSync(src)) return;

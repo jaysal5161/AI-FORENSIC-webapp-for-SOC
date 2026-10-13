@@ -38,7 +38,8 @@ const PORT = process.env.PORT || 5000;
 
 // Security Middleware (OWASP A05 / API8)
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'same-origin' }
+  crossOriginResourcePolicy: { policy: 'same-origin' },
+  contentSecurityPolicy: false
 }));
 
 const allowedOrigins = [

@@ -24,3 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+if (typeof window !== 'undefined') {
+  window.__react_mounted = true;
+}

@@ -11,10 +11,23 @@ const getInitialUser = () => {
   }
 };
 
+const getInitialToken = () => {
+  try {
+    const raw = localStorage.getItem('token');
+    if (!raw || raw === 'undefined' || raw === 'null' || raw === '[object Object]') return null;
+    return raw;
+  } catch {
+    return null;
+  }
+};
+
+const initialToken = getInitialToken();
+const initialUser = getInitialUser();
+
 export const useAuthStore = create((set, get) => ({
-  user: getInitialUser(),
-  token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  user: initialUser,
+  token: initialToken,
+  isAuthenticated: Boolean(initialToken && initialUser),
   isLoading: false,
   error: null,
 

@@ -18,5 +18,20 @@
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      setTimeout(function() {
+        if (!window.__react_mounted) {
+          var container = document.getElementById('root');
+          if (container && !document.getElementById('aegis-fallback-panel')) {
+            var panel = document.createElement('div');
+            panel.id = 'aegis-fallback-panel';
+            panel.style.cssText = 'margin-top:16px;text-align:center;font-family:monospace;font-size:12px;color:#94a3b8;';
+            panel.innerHTML = '<p style="color:#38bdf8;margin:0 0 8px;">Taking longer than expected?</p><button onclick="localStorage.clear();sessionStorage.clear();window.location.href=\'/login\';" style="padding:6px 14px;background:#0369a1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:bold;">Clear Session & Go to Login &rarr;</button>';
+            var inner = container.firstElementChild || container;
+            inner.appendChild(panel);
+          }
+        }
+      }, 3500);
+    </script>
   </body>
 </html>
