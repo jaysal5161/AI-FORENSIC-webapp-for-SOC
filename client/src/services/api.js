@@ -14,6 +14,9 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -44,8 +47,9 @@ export const authApi = {
 
 // Logs API
 export const logsApi = {
-  upload: (formData) => api.post('/logs/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+  upload: (formData, onUploadProgress) => api.post('/logs/upload', formData, {
+    headers: { 'Content-Type': undefined },
+    onUploadProgress
   }),
   parsePreview: (data) => api.post('/logs/parse-preview', data),
   getFiles: () => api.get('/logs/files'),

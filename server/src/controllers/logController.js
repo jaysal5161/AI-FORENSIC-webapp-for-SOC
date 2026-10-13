@@ -13,12 +13,13 @@ const profilingService = require('../services/profilingService');
 const detectionService = require('../services/detectionService');
 const logger = require('../utils/logger');
 const { uploadsDir, ensureUploadsDir } = require('../utils/storage');
+const { persistSync } = require('../db/sqlite');
 
 function detectFormat(fileName, content) {
-  const ext = path.extname(fileName).toLowerCase();
+  const ext = path.extname(fileName || '').toLowerCase();
   if (ext === '.csv') return 'csv';
   if (ext === '.json') return 'json';
-  const trimmed = content.trim();
+  const trimmed = (content || '').trim();
   if (trimmed.startsWith('{') || trimmed.startsWith('[')) return 'json';
   if (trimmed.includes('sshd') || trimmed.includes('syslog') || /^[A-Z][a-z]{2}\s+\d+/.test(trimmed)) return 'syslog';
   if (ext === '.log') return 'syslog';
@@ -40,8 +41,41 @@ async function uploadLog(req, res, next) {
       fileName = req.file.originalname;
       storedName = req.file.filename;
       storedPath = req.file.path;
+      fileSize = req.file.size;
+
+      // 1. Validate empty file (Phase 2 & Phase 6)
+      if (!fileSize || fileSize === 0) {
+        if (storedPath && fs.existsSync(storedPath)) {
+          try { fs.unlinkSync(storedPath); } catch (e) {}
+        }
+        return res.status(400).json({
+          error: 'EmptyFileError',
+          message: 'Upload failed: File is empty (0 bytes)'
+        });
+      }
+
+      // 2. Validate maximum file size (25 MB limit)
+      if (fileSize > 25 * 1024 * 1024) {
+        if (storedPath && fs.existsSync(storedPath)) {
+          try { fs.unlinkSync(storedPath); } catch (e) {}
+        }
+        return res.status(400).json({
+          error: 'FileSizeExceeded',
+          message: 'Upload failed: File exceeds 25 MB'
+        });
+      }
+
       content = fs.readFileSync(storedPath, 'utf8');
-      fileSize = req.file.size || Buffer.byteLength(content, 'utf8');
+
+      if (!content || content.trim().length === 0) {
+        if (storedPath && fs.existsSync(storedPath)) {
+          try { fs.unlinkSync(storedPath); } catch (e) {}
+        }
+        return res.status(400).json({
+          error: 'EmptyFileError',
+          message: 'Upload failed: File contains no content (0 bytes)'
+        });
+      }
 
       if (!saveFileOption) {
         // User explicitly chose not to retain the raw file in disk archive
@@ -58,6 +92,20 @@ async function uploadLog(req, res, next) {
       fileName = req.body.fileName || 'manual_entry.log';
       fileSize = Buffer.byteLength(content, 'utf8');
 
+      if (!content || content.trim().length === 0 || fileSize === 0) {
+        return res.status(400).json({
+          error: 'EmptyFileError',
+          message: 'Upload failed: File is empty (0 bytes)'
+        });
+      }
+
+      if (fileSize > 25 * 1024 * 1024) {
+        return res.status(400).json({
+          error: 'FileSizeExceeded',
+          message: 'Upload failed: File exceeds 25 MB'
+        });
+      }
+
       if (saveFileOption) {
         const hash = crypto.randomBytes(8).toString('hex');
         const safeName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -66,52 +114,103 @@ async function uploadLog(req, res, next) {
         fs.writeFileSync(storedPath, content, 'utf8');
       }
     } else {
-      return res.status(400).json({ error: 'BadRequest', message: 'No file or content uploaded' });
+      return res.status(400).json({ error: 'BadRequest', message: 'Upload failed: No file or content provided' });
     }
 
-    // 1. Parse raw content
-    const rawRecords = parserService.parseFile(fileName, content);
+    // 3. Parse raw content
+    let rawRecords = [];
+    try {
+      rawRecords = parserService.parseFile(fileName, content);
+    } catch (parseErr) {
+      if (storedPath && fs.existsSync(storedPath)) {
+        try { fs.unlinkSync(storedPath); } catch (e) {}
+      }
+      return res.status(400).json({
+        error: 'ParseError',
+        message: `Parsing failed: ${parseErr.message || 'Invalid log file structure'}`
+      });
+    }
+
     if (!rawRecords || rawRecords.length === 0) {
       if (storedPath && fs.existsSync(storedPath)) {
         try { fs.unlinkSync(storedPath); } catch (e) {}
       }
       return res.status(400).json({
         error: 'ParseError',
-        message: 'No valid records could be parsed from the provided log file'
+        message: 'Parsing failed: No valid security events found in the uploaded file'
       });
     }
 
-    // 2. Normalize to Common Event Model
+    // 4. Normalize to Common Event Model
     const normalizedEvents = normalizationService.normalizeRecords(rawRecords, fileName);
-
-    // 3. Insert events in chunks
-    const CHUNK_SIZE = 250;
-    const insertedEvents = [];
-    for (let i = 0; i < normalizedEvents.length; i += CHUNK_SIZE) {
-      const chunk = normalizedEvents.slice(i, i + CHUNK_SIZE);
-      const inserted = await Event.insertMany(chunk, { ordered: false });
-      insertedEvents.push(...inserted);
+    if (!normalizedEvents || normalizedEvents.length === 0) {
+      if (storedPath && fs.existsSync(storedPath)) {
+        try { fs.unlinkSync(storedPath); } catch (e) {}
+      }
+      return res.status(400).json({
+        error: 'NormalizationError',
+        message: 'Parsing failed: No valid security events could be normalized'
+      });
     }
 
-    // 4. Post-processing pipeline
-    // A. IOC extraction
-    const iocsExtracted = await iocExtractionService.extractAndStoreIOCs(insertedEvents);
+    // 5. Insert events in bounded chunks with error tracking
+    const CHUNK_SIZE = 500;
+    const insertedEvents = [];
+    let rejectedRecords = 0;
 
-    // B. Threat intel enrichment
-    const recentIOCs = await IOC.find().sort({ updatedAt: -1 }).limit(100);
-    await threatIntelService.enrichIOCs(recentIOCs);
+    for (let i = 0; i < normalizedEvents.length; i += CHUNK_SIZE) {
+      const chunk = normalizedEvents.slice(i, i + CHUNK_SIZE);
+      try {
+        const inserted = await Event.insertMany(chunk, { ordered: false });
+        insertedEvents.push(...inserted);
+      } catch (insertErr) {
+        rejectedRecords += chunk.length;
+        logger.error(`Database insertion batch error at offset ${i}: ${insertErr.message}`);
+      }
+    }
 
-    // C. Asset & account profiling
-    await profilingService.updateProfilesFromEvents(insertedEvents);
+    if (insertedEvents.length === 0) {
+      if (storedPath && fs.existsSync(storedPath)) {
+        try { fs.unlinkSync(storedPath); } catch (e) {}
+      }
+      return res.status(500).json({
+        error: 'DatabaseError',
+        message: 'Database error: Unable to store security events in database'
+      });
+    }
 
-    // D. Detection engine
-    const alertsGenerated = await detectionService.runDetectionEngine(insertedEvents);
+    // 6. Post-processing pipeline
+    let iocsExtracted = 0;
+    try {
+      iocsExtracted = await iocExtractionService.extractAndStoreIOCs(insertedEvents);
+    } catch (iocErr) {
+      logger.warn(`IOC extraction warning: ${iocErr.message}`);
+    }
 
-    // 5. Generate SHA256 forensic checksum
+    try {
+      const recentIOCs = await IOC.find().sort({ updatedAt: -1 }).limit(100);
+      await threatIntelService.enrichIOCs(recentIOCs);
+    } catch (tiErr) {
+      logger.warn(`Threat intel enrichment warning: ${tiErr.message}`);
+    }
+
+    try {
+      await profilingService.updateProfilesFromEvents(insertedEvents);
+    } catch (profErr) {
+      logger.warn(`Asset profiling warning: ${profErr.message}`);
+    }
+
+    let alertsGenerated = [];
+    try {
+      alertsGenerated = await detectionService.runDetectionEngine(insertedEvents);
+    } catch (detErr) {
+      logger.warn(`Detection engine warning: ${detErr.message}`);
+    }
+
+    // 7. Generate forensic SHA256 checksum and record LogFile metadata
     const sha256 = crypto.createHash('sha256').update(content).digest('hex');
     const format = detectFormat(fileName, content);
 
-    // 6. Record LogFile archive in DB
     const logFileRecord = await LogFile.create({
       fileName,
       storedName,
@@ -128,18 +227,24 @@ async function uploadLog(req, res, next) {
       status: 'processed'
     });
 
-    logger.info(`Log ingestion pipeline finished for ${fileName}: ${insertedEvents.length} events, ${iocsExtracted} IOCs, ${alertsGenerated.length} alerts. (Archive Saved: ${Boolean(storedPath)})`);
+    // 8. Synchronously persist all database tables to disk (vital for reliability & serverless)
+    persistSync();
+
+    logger.info(`Log ingestion pipeline finished for ${fileName}: ${insertedEvents.length}/${rawRecords.length} stored, ${iocsExtracted} IOCs, ${alertsGenerated.length} alerts.`);
 
     res.status(201).json({
       message: 'Logs processed and normalized successfully',
       summary: {
         fileName,
+        fileSize,
+        recordsProcessed: rawRecords.length,
         eventsInserted: insertedEvents.length,
+        rejectedRecords,
         iocsExtracted,
         alertsGenerated: alertsGenerated.length,
         isSaved: Boolean(storedPath),
         logFileId: logFileRecord._id,
-        errors: 0
+        errors: rejectedRecords
       },
       logFile: logFileRecord
     });

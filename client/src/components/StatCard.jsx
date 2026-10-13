@@ -40,9 +40,9 @@ export default function StatCard({
   const scheme = colorMap[color] || colorMap.cyan;
 
   return (
-    <div className={`bg-[#0f1422] border rounded-xl p-5 transition-all duration-200 ${scheme.border} ${scheme.glow} ${className}`}>
+    <div className={`bg-[#0f1422] border rounded-xl p-5 transition-all duration-200 select-none cursor-default ${scheme.border} ${scheme.glow} ${className}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono select-none cursor-default">
           {title}
         </span>
         {Icon && (
@@ -52,19 +52,19 @@ export default function StatCard({
         )}
       </div>
 
-      <div className="mt-4 flex items-baseline justify-between">
-        <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white">
+      <div className="mt-4 flex items-baseline justify-between select-none cursor-default">
+        <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white select-none cursor-default">
           {value !== undefined && value !== null ? value : '-'}
         </span>
         {trend && (
-          <span className={`text-xs font-mono font-medium ${trend.startsWith('+') ? 'text-rose-400' : 'text-emerald-400'}`}>
+          <span className={`text-xs font-mono font-medium select-none cursor-default ${trend.startsWith('+') ? 'text-rose-400' : 'text-emerald-400'}`}>
             {trend}
           </span>
         )}
       </div>
 
       {subtitle && (
-        <p className="mt-2 text-xs text-slate-400 truncate">
+        <p className="mt-2 text-xs text-slate-400 truncate select-none cursor-default">
           {subtitle}
         </p>
       )}

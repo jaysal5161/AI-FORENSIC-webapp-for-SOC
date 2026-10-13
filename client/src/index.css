@@ -12,7 +12,22 @@ body {
   color: #e2e8f0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: hidden;
+  caret-color: transparent;
 }
+
+/* Ensure form inputs retain their text caret while preventing carets on headers/cards */
+input,
+textarea,
+[contenteditable="true"] {
+  caret-color: auto;
+}
+
+/* Headers, labels, cards and metrics default to non-text cursor and prevent accidental caret browsing */
+h1, h2, h3, h4, h5, h6, th, label {
+  user-select: none;
+  cursor: default;
+}
+
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {

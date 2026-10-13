@@ -79,6 +79,10 @@ export default function Logs() {
     queryClient.invalidateQueries({ queryKey: ['uploadedFiles'] });
     queryClient.invalidateQueries({ queryKey: ['recentLogsEvents'] });
     queryClient.invalidateQueries({ queryKey: ['dashboardSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    queryClient.invalidateQueries({ queryKey: ['iocs'] });
+    queryClient.invalidateQueries({ queryKey: ['endpoints'] });
+    queryClient.invalidateQueries({ queryKey: ['accounts'] });
     if (summary?.fileName) {
       setSelectedFile(summary.fileName);
       localStorage.setItem('aegis_active_log_file', summary.fileName);

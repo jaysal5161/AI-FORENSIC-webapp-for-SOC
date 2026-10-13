@@ -5,8 +5,8 @@ import { useAuthStore } from '../stores/authStore';
 import Spinner from '../components/Spinner';
 
 export default function Login() {
-  const [username, setUsername] = useState('analyst');
-  const [password, setPassword] = useState('analyst123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const { login, isLoading, error } = useAuthStore();
   const navigate = useNavigate();
 
@@ -16,11 +16,6 @@ export default function Login() {
     if (res.success) {
       navigate('/');
     }
-  };
-
-  const setPreset = (u, p) => {
-    setUsername(u);
-    setPassword(p);
   };
 
   return (
@@ -72,7 +67,7 @@ export default function Login() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 bg-[#080b12] border border-slate-800 rounded-lg text-sm text-slate-200 placeholder-slate-600 font-mono focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-colors"
-                  placeholder="analyst"
+                  placeholder="Enter username"
                 />
               </div>
             </div>
@@ -97,54 +92,12 @@ export default function Login() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black text-xs font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 shadow-[0_0_15px_rgba(6,182,212,0.35)] disabled:opacity-50 transition-all"
+              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-black text-xs font-bold font-mono uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 shadow-[0_0_15px_rgba(6,182,212,0.35)] disabled:opacity-50 transition-all cursor-pointer"
             >
               {isLoading ? <Spinner size="sm" /> : <ArrowRight className="w-4 h-4" />}
               {isLoading ? 'Authorizing...' : 'Initialize Session'}
             </button>
           </form>
-
-          {/* Preset Quick Login Buttons */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <span className="text-[11px] font-mono text-slate-400 block mb-2 text-center uppercase tracking-wider">
-              Quick Role Switch (Demo Credentials)
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setPreset('admin', 'admin123')}
-                className={`py-1.5 px-2 rounded-lg border text-xs font-mono transition-all ${
-                  username === 'admin'
-                    ? 'bg-purple-950/80 border-purple-600 text-purple-300 font-bold'
-                    : 'bg-[#080b12] border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreset('analyst', 'analyst123')}
-                className={`py-1.5 px-2 rounded-lg border text-xs font-mono transition-all ${
-                  username === 'analyst'
-                    ? 'bg-cyan-950/80 border-cyan-600 text-cyan-300 font-bold'
-                    : 'bg-[#080b12] border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Analyst
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreset('viewer', 'viewer123')}
-                className={`py-1.5 px-2 rounded-lg border text-xs font-mono transition-all ${
-                  username === 'viewer'
-                    ? 'bg-slate-800 border-slate-600 text-slate-200 font-bold'
-                    : 'bg-[#080b12] border-slate-800 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Viewer
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Security Notice */}

@@ -127,29 +127,29 @@ export default function UploadedFilesList({ selectedFile, onSelectFile, onFileDe
   return (
     <div className="space-y-4">
       {/* Archive Header & Summary Bar */}
-      <div className="p-4 bg-[#0f1422] border border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 bg-[#0f1422] border border-slate-800 rounded-2xl flex flex-wrap items-center justify-between gap-4 select-none cursor-default">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
             <FolderArchive className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold font-mono text-slate-100 uppercase tracking-wide">
+              <h3 className="text-sm font-bold font-mono text-slate-100 uppercase tracking-wide select-none cursor-default">
                 Ingested Log Files Archive
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono">
+              <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-mono select-none cursor-default">
                 {files.length} {files.length === 1 ? 'file' : 'files'}
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-mono mt-0.5">
+            <p className="text-xs text-slate-400 font-mono mt-0.5 select-none cursor-default">
               Select any file to inspect its normalized telemetry, view raw logs, or manage archives.
             </p>
           </div>
         </div>
 
         {/* Quick Stats & Refresh */}
-        <div className="flex items-center gap-3 font-mono text-xs">
-          <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-[#0a0d14] border border-slate-800 text-slate-400">
+        <div className="flex items-center gap-3 font-mono text-xs select-none cursor-default">
+          <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-[#0a0d14] border border-slate-800 text-slate-400 select-none cursor-default">
             <span>Total Events: <strong className="text-cyan-400">{totalEvents}</strong></span>
             <span className="text-slate-700">|</span>
             <span>Storage: <strong className="text-slate-200">{formatBytes(totalBytes)}</strong></span>
